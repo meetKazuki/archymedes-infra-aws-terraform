@@ -1,0 +1,60 @@
+name: Terraform Apply
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        description: "Environment directory under environments/ (e.g., dev)"
+        required: true
+        default: "dev"
+      aws_region:
+        description: "AWS region (must match the plan run)"
+        required: true
+        default: "us-east-1"
+      plan_run_id:
+        description: "GitHub Actions Run ID of the matching Terraform Plan run"
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.env }}
+    defaults:
+      run:
+        working-directory: ./environments/${{ github.event.inputs.env }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ github.event.inputs.aws_region }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.5"
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ secrets.AWS_TF_STATE_BUCKET }}" \
+            -backend-config="key=environments/${{ github.event.inputs.env }}/terraform.tfstate" \
+            -backend-config="region=${{ github.event.inputs.aws_region }}"
+
+      - name: Download plan artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ github.event.inputs.env }}-tfplan
+          path: ./environments/${{ github.event.inputs.env }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.inputs.plan_run_id }}
+
+      - name: Terraform Apply
+        run: terraform apply -input=false -auto-approve tfplan

@@ -1,0 +1,76 @@
+name: Terraform Plan
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        description: "Environment directory under environments/ (e.g., dev)"
+        required: true
+        default: "dev"
+      aws_region:
+        description: "AWS region"
+        required: false
+        default: "us-east-1"
+      ecr_repo_name:
+        description: "ECR repository name"
+        required: false
+        default: "archymedes-app"
+      s3_bucket_name:
+        description: "S3 bucket name (must be globally unique)"
+        required: true
+      allowed_principal_arns:
+        description: 'JSON list of IAM principal ARNs allowed to push/pull ECR. Empty list = the GHA role itself. Example: ["arn:aws:iam::111122223333:user/me"]'
+        required: false
+        default: "[]"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./environments/${{ github.event.inputs.env }}
+
+    env:
+      TF_VAR_aws_region: ${{ github.event.inputs.aws_region }}
+      TF_VAR_ecr_repo_name: ${{ github.event.inputs.ecr_repo_name }}
+      TF_VAR_s3_bucket_name: ${{ github.event.inputs.s3_bucket_name }}
+      TF_VAR_allowed_principal_arns: ${{ github.event.inputs.allowed_principal_arns }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ github.event.inputs.aws_region }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.5"
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ secrets.AWS_TF_STATE_BUCKET }}" \
+            -backend-config="key=environments/${{ github.event.inputs.env }}/terraform.tfstate" \
+            -backend-config="region=${{ github.event.inputs.aws_region }}"
+
+      - name: Terraform Plan
+        run: terraform plan -input=false -out=tfplan
+
+      - name: Show plan summary
+        run: terraform show -no-color tfplan | tee plan-summary.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.inputs.env }}-tfplan
+          path: |
+            ./environments/${{ github.event.inputs.env }}/tfplan
+            ./environments/${{ github.event.inputs.env }}/plan-summary.txt
+          retention-days: 1

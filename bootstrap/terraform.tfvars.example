@@ -1,0 +1,7 @@
+# Copy to terraform.tfvars and fill in.
+aws_region        = "us-east-1"
+state_bucket_name = "archymedes-tfstate-CHANGE-ME"  # must be globally unique
+github_org        = "meetKazuki"
+github_repo       = "archymedes"
+github_branches   = ["main"]
+role_name         = "archymedes-gha-deployer"
