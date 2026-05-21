@@ -1,0 +1,27 @@
+# LocalStack for local infrastructure testing.
+#
+# As of March 23, 2026, LocalStack requires an account and an auth token. Sign
+# up at https://app.localstack.cloud, then export LOCALSTACK_AUTH_TOKEN before
+# running `docker compose up`.
+#
+# Usage:
+#   export LOCALSTACK_AUTH_TOKEN=your-token
+#   docker compose -f compose.localstack.yml up -d
+#   make local-apply
+#
+# Stop with:
+#   docker compose -f compose.localstack.yml down
+
+services:
+  localstack:
+    container_name: archymedes-localstack
+    image: localstack/localstack:latest
+    ports:
+      - "4566:4566"
+    environment:
+      - LOCALSTACK_AUTH_TOKEN=${LOCALSTACK_AUTH_TOKEN}
+      - SERVICES=s3,ecr,iam,sts,ec2
+      - DEBUG=0
+      - DEFAULT_REGION=us-east-1
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"

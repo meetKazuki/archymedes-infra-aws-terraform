@@ -102,7 +102,7 @@ Push the repo to GitHub. Then in the **Actions** tab:
 
 ### 4. Demonstrate ECR push/pull
 
-See [`docs/ecr-push-pull-demo.md`](docs/ecr-push-pull-demo.md).
+See [`doc/verification.md`](doc/verification.md).
 
 ## Pipeline inputs (run-time parameters)
 
@@ -110,7 +110,7 @@ See [`docs/ecr-push-pull-demo.md`](docs/ecr-push-pull-demo.md).
 
 | Input | Required | Default | Notes |
 |---|---|---|---|
-| `env` | ✅ | `dev` | Subdirectory under `environments/`. |
+| `env` | ✅ | `prod` | Subdirectory under `environments/`. |
 | `aws_region` | | `us-east-1` | Must match the bootstrap region. |
 | `ecr_repo_name` | | `archymedes-app` | Will be lowercased and `-`-joined. |
 | `s3_bucket_name` | ✅ | _none_ | **Globally unique** — pick something like `archymedes-dev-<your-handle>-<short-random>`. |
@@ -120,7 +120,7 @@ See [`docs/ecr-push-pull-demo.md`](docs/ecr-push-pull-demo.md).
 
 | Input | Required | Default | Notes |
 |---|---|---|---|
-| `env` | ✅ | `dev` | Must match the plan run. |
+| `env` | ✅ | `prod` | Must match the plan run. |
 | `aws_region` | ✅ | `us-east-1` | Must match the plan run. |
 | `plan_run_id` | ✅ | _none_ | The numeric Run ID of the Plan workflow run whose artifact to download. |
 
