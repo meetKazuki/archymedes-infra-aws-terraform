@@ -100,36 +100,70 @@ data "aws_iam_policy_document" "gha_permissions" {
       "ecr:PutLifecyclePolicy",
       "ecr:DeleteLifecyclePolicy",
     ]
-    resources = ["*"]
+    resources = [
+      "arn:aws:ecr:*:${data.aws_caller_identity.current.account_id}:repository/${var.resource_name_prefix}-*",
+    ]
   }
 
   statement {
-    sid    = "S3ManageBuckets"
+    sid    = "S3ManageWorkloadBuckets"
     effect = "Allow"
     actions = [
       "s3:CreateBucket",
       "s3:DeleteBucket",
       "s3:ListBucket",
-      "s3:GetBucket*",
-      "s3:PutBucket*",
+      "s3:GetBucketLocation",
+      "s3:GetBucketPolicy",
+      "s3:PutBucketPolicy",
+      "s3:DeleteBucketPolicy",
+      "s3:GetBucketAcl",
+      "s3:PutBucketAcl",
+      "s3:GetBucketVersioning",
+      "s3:PutBucketVersioning",
+      "s3:GetBucketTagging",
+      "s3:PutBucketTagging",
+      "s3:GetBucketPublicAccessBlock",
+      "s3:PutBucketPublicAccessBlock",
+      "s3:GetBucketOwnershipControls",
+      "s3:PutBucketOwnershipControls",
       "s3:GetEncryptionConfiguration",
       "s3:PutEncryptionConfiguration",
-      "s3:GetAccelerateConfiguration",
-      "s3:GetReplicationConfiguration",
       "s3:GetLifecycleConfiguration",
       "s3:PutLifecycleConfiguration",
+      "s3:GetAccelerateConfiguration",
+      "s3:GetReplicationConfiguration",
+    ]
+    resources = [
+      "arn:aws:s3:::${var.resource_name_prefix}-*",
+    ]
+  }
+
+  # --- S3: access points ---------------------------------------------------
+  statement {
+    sid    = "S3ManageWorkloadAccessPoints"
+    effect = "Allow"
+    actions = [
       "s3:GetAccessPoint",
       "s3:CreateAccessPoint",
       "s3:DeleteAccessPoint",
       "s3:GetAccessPointPolicy",
       "s3:PutAccessPointPolicy",
-      "s3:ListAccessPoints",
+      "s3:DeleteAccessPointPolicy",
     ]
+    resources = [
+      "arn:aws:s3:*:${data.aws_caller_identity.current.account_id}:accesspoint/${var.resource_name_prefix}-*",
+    ]
+  }
+
+  statement {
+    sid       = "S3ListAccessPointsAccountWide"
+    effect    = "Allow"
+    actions   = ["s3:ListAccessPoints"]
     resources = ["*"]
   }
 
   statement {
-    sid    = "Ec2ReadOnly"
+    sid    = "Ec2Describe"
     effect = "Allow"
     actions = [
       "ec2:DescribeVpcs",
@@ -138,22 +172,11 @@ data "aws_iam_policy_document" "gha_permissions" {
     resources = ["*"]
   }
 
+  # --- STS -----------------------------------------------------------------
   statement {
-    sid    = "Sts"
-    effect = "Allow"
-    actions = [
-      "sts:GetCallerIdentity",
-    ]
-    resources = ["*"]
-  }
-
-  statement {
-    sid    = "Kms"
-    effect = "Allow"
-    actions = [
-      "kms:DescribeKey",
-      "kms:ListAliases",
-    ]
+    sid       = "StsGetCallerIdentity"
+    effect    = "Allow"
+    actions   = ["sts:GetCallerIdentity"]
     resources = ["*"]
   }
 
@@ -161,13 +184,21 @@ data "aws_iam_policy_document" "gha_permissions" {
     sid    = "TerraformStateBucket"
     effect = "Allow"
     actions = [
+      "s3:ListBucket",
+      "s3:GetBucketVersioning",
+    ]
+    resources = [aws_s3_bucket.tfstate.arn]
+  }
+
+  statement {
+    sid    = "TerraformStateObjects"
+    effect = "Allow"
+    actions = [
       "s3:GetObject",
       "s3:PutObject",
       "s3:DeleteObject",
-      "s3:ListBucket",
     ]
     resources = [
-      aws_s3_bucket.tfstate.arn,
       "${aws_s3_bucket.tfstate.arn}/*",
     ]
   }

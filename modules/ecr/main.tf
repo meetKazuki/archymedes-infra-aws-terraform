@@ -1,7 +1,3 @@
-##############################################################
-# Caller identity (used as default principal if none supplied)
-##############################################################
-
 data "aws_caller_identity" "current" {}
 
 ##############################################################
@@ -21,11 +17,6 @@ resource "aws_ecr_repository" "this" {
   }
 }
 
-##############################################################
-# Repository policy: restrict push/pull to the listed principals.
-# Falls back to the current caller's ARN if no principals provided.
-##############################################################
-
 data "aws_iam_policy_document" "this" {
   statement {
     sid    = "AllowOwnerPushPull"
@@ -36,7 +27,6 @@ data "aws_iam_policy_document" "this" {
       identifiers = local.effective_principals
     }
 
-    # Push actions
     actions = [
       "ecr:BatchCheckLayerAvailability",
       "ecr:InitiateLayerUpload",
@@ -56,10 +46,6 @@ resource "aws_ecr_repository_policy" "this" {
   repository = aws_ecr_repository.this.name
   policy     = data.aws_iam_policy_document.this.json
 }
-
-##############################################################
-# Lifecycle policy (optional, on by default to keep storage sane)
-##############################################################
 
 resource "aws_ecr_lifecycle_policy" "this" {
   count      = var.lifecycle_keep_last == 0 ? 0 : 1

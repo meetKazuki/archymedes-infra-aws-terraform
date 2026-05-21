@@ -30,3 +30,9 @@ variable "role_name" {
   description = "Name of the IAM role assumed by GitHub Actions."
   default     = "archymedes-gha-deployer"
 }
+
+variable "resource_name_prefix" {
+  type        = string
+  description = "Prefix that every workload resource name must start with. Used to scope the deployer role's IAM permissions to only resources under this prefix."
+  default     = "archymedes"
+}
