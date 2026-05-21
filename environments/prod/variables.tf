@@ -12,7 +12,7 @@ variable "app_name" {
 variable "environment" {
   type        = string
   description = "Deployment environment name."
-  default     = "dev"
+  default     = "prod"
 }
 
 variable "ecr_repo_name" {
