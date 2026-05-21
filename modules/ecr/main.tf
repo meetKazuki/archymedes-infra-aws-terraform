@@ -8,6 +8,7 @@ data "aws_caller_identity" "current" {}
 # ECR repository
 ##############################################################
 
+# tfsec:ignore:aws-ecr-repository-customer-key The challenge spec calls for "encryption using an AWS managed key", which AWS docs map specifically to the aws/ecr AWS-managed KMS key (not a customer-managed key). Switching to CMK would exceed and mismatch the spec.
 resource "aws_ecr_repository" "this" {
   name                 = local.repository_name_parsed
   image_tag_mutability = "IMMUTABLE"
@@ -16,6 +17,8 @@ resource "aws_ecr_repository" "this" {
     scan_on_push = true
   }
 
+  # "AWS managed key" => SSE-KMS with the AWS-managed aws/ecr KMS key.
+  # Omitting kms_key here selects that default; AES256 would be AWS-OWNED.
   encryption_configuration {
     encryption_type = "KMS"
   }

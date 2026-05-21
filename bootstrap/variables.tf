@@ -22,11 +22,17 @@ variable "github_repo" {
 variable "github_branches" {
   type        = list(string)
   description = "Branches whose workflow runs may assume the role. Use ['*'] for all branches."
-  default     = ["master"]
+  default     = ["main"]
 }
 
 variable "role_name" {
   type        = string
   description = "Name of the IAM role assumed by GitHub Actions."
   default     = "archymedes-gha-deployer"
+}
+
+variable "resource_name_prefix" {
+  type        = string
+  description = "Prefix that every workload resource name must start with. Used to scope the deployer role's IAM permissions to only resources under this prefix."
+  default     = "archymedes"
 }
