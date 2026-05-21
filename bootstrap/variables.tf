@@ -25,6 +25,12 @@ variable "github_branches" {
   default     = ["master"]
 }
 
+variable "github_environments" {
+  type        = list(string)
+  description = "GitHub Environments that workflow jobs may assume the role from. Used by tf-apply.yml and tf-destroy.yml, which declare `environment:` on their job."
+  default     = ["prod"]
+}
+
 variable "role_name" {
   type        = string
   description = "Name of the IAM role assumed by GitHub Actions."

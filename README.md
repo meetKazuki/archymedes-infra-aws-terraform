@@ -61,14 +61,14 @@ The workflows request a short-lived OIDC token via `permissions: id-token: write
 
 ## Getting started
 
-### 0. Prerequisites
+### 1. Prerequisites
 
 - Terraform `>= 1.10` (for S3 native state locking)
 - AWS CLI v2
 - Docker (for the LocalStack and ECR demos)
 - An AWS account where you can create IAM resources
 
-### 1. Bootstrap (one time, per account)
+### 2. Bootstrap (one time, per account)
 
 This creates the state bucket and the GitHub Actions deployer role.
 
@@ -92,7 +92,7 @@ Take the three outputs and save them as GitHub repo secrets:
 Back up `bootstrap/terraform.tfstate` outside the repo (don't commit
 it — it contains the OIDC and role ARNs).
 
-### 2. Run the pipelines
+### 3. Run the pipelines
 
 Push the repo to GitHub. Then in the **Actions** tab:
 
@@ -100,7 +100,7 @@ Push the repo to GitHub. Then in the **Actions** tab:
 2. **Terraform Apply** — run with the same `env` and `aws_region`, and the plan's *run ID*. Apply downloads the plan artifact from that run.
 3. **Terraform Destroy** — when finished, run with the same inputs. Type `destroy` into the `confirm` input or the job won't start.
 
-### 3. Demonstrate ECR push/pull
+### 4. Demonstrate ECR push/pull
 
 See [`docs/ecr-push-pull-demo.md`](docs/ecr-push-pull-demo.md).
 
@@ -152,8 +152,6 @@ make local-apply     # terraform apply against LocalStack
 make local-destroy
 make local-down
 ```
-
-Don't ship a final deliverable based only on LocalStack — use it for fast iteration, but verify on real AWS before submission.
 
 ### Layer 3 — Real AWS
 
