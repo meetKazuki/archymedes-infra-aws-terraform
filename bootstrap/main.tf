@@ -67,10 +67,12 @@ data "aws_iam_policy_document" "gha_trust" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values = [
-        for branch in var.github_branches :
-        "repo:${var.github_org}/${var.github_repo}:ref:refs/heads/${branch}"
-      ]
+      values = concat(
+        [for branch in var.github_branches :
+        "repo:${var.github_org}/${var.github_repo}:ref:refs/heads/${branch}"],
+        [for env in var.github_environments :
+        "repo:${var.github_org}/${var.github_repo}:environment:${env}"]
+      )
     }
   }
 }

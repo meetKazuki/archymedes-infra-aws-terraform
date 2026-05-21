@@ -4,8 +4,8 @@ One-time setup that creates everything the main pipelines depend on:
 
 1. **Terraform state bucket** — versioned, encrypted, public access blocked.
 2. **GitHub OIDC identity provider** in AWS IAM.
-3. **IAM role** that GitHub Actions assumes via OIDC. Scoped to manage the resources
-the modules create plus the state bucket.
+3. **IAM role** that GitHub Actions assumes via OIDC. Scoped to manage the resources the modules create plus
+the state bucket.
 
 State for this config is intentionally **local** — there is no remote backend, because this config *creates*
 the bucket the remote backend would use. Apply once, then back up `terraform.tfstate` somewhere safe
