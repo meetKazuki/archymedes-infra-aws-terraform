@@ -166,6 +166,13 @@ data "aws_iam_policy_document" "gha_permissions" {
   }
 
   statement {
+    sid       = "IamGetSelfRole"
+    effect    = "Allow"
+    actions   = ["iam:GetRole"]
+    resources = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.role_name}"]
+  }
+
+  statement {
     sid    = "TerraformStateBucket"
     effect = "Allow"
     actions = [
