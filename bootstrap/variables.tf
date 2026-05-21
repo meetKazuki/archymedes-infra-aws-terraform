@@ -22,7 +22,7 @@ variable "github_repo" {
 variable "github_branches" {
   type        = list(string)
   description = "Branches whose workflow runs may assume the role. Use ['*'] for all branches."
-  default     = ["main"]
+  default     = ["master"]
 }
 
 variable "role_name" {

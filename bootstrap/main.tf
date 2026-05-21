@@ -35,14 +35,6 @@ resource "aws_s3_bucket_ownership_controls" "tfstate" {
   rule { object_ownership = "BucketOwnerEnforced" }
 }
 
-##############################################################
-# GitHub OIDC provider
-# (AWS no longer requires the thumbprint to be supplied for the
-# token.actions.githubusercontent.com endpoint — it's fetched
-# automatically — but the field is still required by the API.
-# We pass the well-known value.)
-##############################################################
-
 resource "aws_iam_openid_connect_provider" "github" {
   url            = "https://token.actions.githubusercontent.com"
   client_id_list = ["sts.amazonaws.com"]
@@ -188,9 +180,6 @@ data "aws_iam_policy_document" "gha_permissions" {
     resources = ["*"]
   }
 
-  # --- Terraform state bucket ---------------------------------------------
-  # Scoped to exactly this bucket and its objects. The "/*" suffix is
-  # the canonical ARN pattern for "all objects in this bucket".
   statement {
     sid    = "TerraformStateBucket"
     effect = "Allow"
