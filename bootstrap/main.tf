@@ -110,28 +110,10 @@ data "aws_iam_policy_document" "gha_permissions" {
     effect = "Allow"
     actions = [
       "s3:CreateBucket",
-      "s3:DeleteBucket",
-      "s3:ListBucket",
-      "s3:GetBucketLocation",
-      "s3:GetBucketPolicy",
-      "s3:PutBucketPolicy",
-      "s3:DeleteBucketPolicy",
-      "s3:GetBucketAcl",
-      "s3:PutBucketAcl",
-      "s3:GetBucketVersioning",
-      "s3:PutBucketVersioning",
-      "s3:GetBucketTagging",
-      "s3:PutBucketTagging",
-      "s3:GetBucketPublicAccessBlock",
-      "s3:PutBucketPublicAccessBlock",
-      "s3:GetBucketOwnershipControls",
-      "s3:PutBucketOwnershipControls",
-      "s3:GetEncryptionConfiguration",
-      "s3:PutEncryptionConfiguration",
-      "s3:GetLifecycleConfiguration",
-      "s3:PutLifecycleConfiguration",
-      "s3:GetAccelerateConfiguration",
-      "s3:GetReplicationConfiguration",
+      "s3:Get*",
+      "s3:Put*",
+      "s3:Delete*",
+      "s3:List*",
     ]
     resources = [
       "arn:aws:s3:::${var.resource_name_prefix}-*",
@@ -167,6 +149,7 @@ data "aws_iam_policy_document" "gha_permissions" {
     effect = "Allow"
     actions = [
       "ec2:DescribeVpcs",
+      "ec2:DescribeVpcAttribute",
       "ec2:DescribeAccountAttributes",
     ]
     resources = ["*"]
