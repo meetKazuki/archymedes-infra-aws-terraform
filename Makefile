@@ -3,7 +3,7 @@ SHELL := /bin/bash
 TF        ?= terraform
 TFLINT    ?= tflint
 TFSEC     ?= tfsec
-DIRS      := modules/ecr modules/s3 environments/dev environments/local bootstrap
+DIRS      := modules/ecr modules/s3 environments/prod environments/local bootstrap
 
 .PHONY: help fmt fmt-check validate lint sec all local-up local-down local-apply local-destroy
 
@@ -43,10 +43,10 @@ sec:
 all: fmt-check validate lint sec
 
 local-up:
-	docker compose up -d
+	docker compose -f compose.localstack.yml up -d
 
 local-down:
-	docker compose down -v
+	docker compose -f compose.localstack.yml down -v
 
 local-apply:
 	$(TF) -chdir=environments/local init
