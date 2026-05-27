@@ -57,3 +57,4 @@ terraform.rc
 .DS_Store
 
 doc/*.md
+!doc/verification.md

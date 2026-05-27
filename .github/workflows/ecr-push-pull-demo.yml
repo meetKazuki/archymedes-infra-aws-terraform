@@ -1,0 +1,89 @@
+name: ECR Push/Pull Demo
+
+on:
+  workflow_dispatch:
+    inputs:
+      aws_region:
+        description: "AWS region (must match where the ECR repository lives)"
+        required: true
+        default: "us-east-1"
+      ecr_repo_name:
+        description: "ECR repository name"
+        required: true
+        default: "archymedes-app"
+      image_tag:
+        description: "Tag to push"
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  push-tag-pull:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ github.event.input.aws_region }}
+
+      - name: Resolve Account ID & Registry URL
+        run: |
+          ACCT=$(aws sts get-caller-identity --query Account --output text)
+          REGISTRY="${ACCT}.dkr.ecr.${{ github.event.inputs.aws_region }}.amazonaws.com"
+          echo "AWS_ACCOUNT_ID=${ACCT}" >> "$GITHUB_ENV"
+          echo "REGISTRY=${REGISTRY}" >> "$GITHUB_ENV"
+          echo "FULL_IMAGE=${REGISTRY}/${{ github.event.inputs.ecr_repo_name }}:${{ github.event.inputs.image_tag }}" >> "$GITHUB_ENV"
+
+      - name: Docker Login to ECR
+        run: |
+          aws ecr get-login-password --region "${{ github.event.inputs.aws_region }}" \
+            | docker login --username AWS --password-stdin "$REGISTRY"
+
+      - name: Pull Image to Push
+        run: docker pull alpine:3.20
+
+      - name: Tag for ECR
+        run: docker tag alpine:3.20 "$FULL_IMAGE"
+
+      - name: Push to ECR
+        run: docker push "$FULL_IMAGE"
+
+      - name: Re-pull from ECR
+        run: |
+          docker rmi alpine:3.20 "$FULL_IMAGE" || true
+          docker pull "$FULL_IMAGE"
+          docker image inspect "$FULL_IMAGE" --format 'Pulled: {{.RepoTags}} digest={{.Id}}'
+
+      - name: Check scan-on-push Findings
+        run: |
+          for i in 1 2 3 4 5; do
+            STATUS=$(aws ecr describe-image-scan-findings \
+              --repository-name "${{ github.event.inputs.ecr_repo_name }}" \
+              --image-id imageTag="${{ github.event.inputs.image_tag }}" \
+              --region "${{ github.event.inputs.aws_region }}" \
+              --query 'imageScanStatus.status' --output text 2>/dev/null || echo "PENDING")
+            echo "Scan status: $STATUS"
+            [ "$STATUS" = "COMPLETE" ] && break
+            sleep 6
+          done
+          aws ecr describe-image-scan-findings \
+            --repository-name "${{ github.event.inputs.ecr_repo_name }}" \
+            --image-id imageTag="${{ github.event.inputs.image_tag }}" \
+            --region "${{ github.event.inputs.aws_region }}" \
+            --query 'imageScanFindingsSummary' || true
+
+      - name: Prove Tag Immutability (should fail)
+        run: |
+          set +e
+          docker push "$FULL_IMAGE"
+          rc=$?
+          set -e
+          if [ "$rc" -eq 0 ]; then
+            echo "::error::Second push to the same tag succeeded — tag immutability is NOT enforced."
+            exit 1
+          fi
+          echo "✓ Immutability enforced — repository rejected the second push to the same tag."
